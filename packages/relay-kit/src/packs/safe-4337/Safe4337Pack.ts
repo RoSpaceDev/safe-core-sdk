@@ -421,20 +421,21 @@ export class Safe4337Pack extends RelayKitBasePack<{
     if (preEstimationData) {
       safeOperation.addEstimations(preEstimationData)
     }
+    else{
+      const estimateUserOperationGas = await this.#bundlerClient.request({
+        method: RPC_4337_CALLS.ESTIMATE_USER_OPERATION_GAS,
+        params: [
+          {
+            ...userOperationToHexValues(safeOperation.getUserOperation(), this.#ENTRYPOINT_ADDRESS),
+            signature: getDummySignature(this.#SAFE_WEBAUTHN_SHARED_SIGNER_ADDRESS, threshold)
+          },
+          this.#ENTRYPOINT_ADDRESS
+        ]
+      })
 
-    const estimateUserOperationGas = await this.#bundlerClient.request({
-      method: RPC_4337_CALLS.ESTIMATE_USER_OPERATION_GAS,
-      params: [
-        {
-          ...userOperationToHexValues(safeOperation.getUserOperation(), this.#ENTRYPOINT_ADDRESS),
-          signature: getDummySignature(this.#SAFE_WEBAUTHN_SHARED_SIGNER_ADDRESS, threshold)
-        },
-        this.#ENTRYPOINT_ADDRESS
-      ]
-    })
-
-    if (estimateUserOperationGas) {
-      safeOperation.addEstimations(estimateUserOperationGas)
+      if (estimateUserOperationGas) {
+        safeOperation.addEstimations(estimateUserOperationGas)
+      }
     }
 
     const postEstimationData = await feeEstimator?.postEstimateUserOperationGas?.({
